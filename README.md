@@ -1,4 +1,4 @@
-## Joechem puppet
+## LEMP Stack Puppet
 
 ## Getting started
 
