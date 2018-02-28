@@ -17,4 +17,10 @@ class roles::kinetix {
           mbstring => {},
       }
     }
+    ~>
+    class { '::nginx':
+      manage_repo => true,
+      package_source => 'nginx_mainline'
+    }
+
 }
