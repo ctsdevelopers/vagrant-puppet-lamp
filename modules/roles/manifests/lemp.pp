@@ -1,0 +1,61 @@
+class roles::lemp {
+    # WITHOUT MySQL (using RDS with AWS)
+    # Install PHP7
+    package { 'git':
+        ensure => 'installed',
+    }
+    class { '::php':
+      ensure       => latest,
+      manage_repos => true,
+      fpm          => true,
+      dev          => true,
+      composer     => true,
+      pear         => true,
+      phpunit      => false,
+      extensions   => {
+          curl => {},
+          pdo => {},
+          mysql => {},
+          mbstring => {},
+      }
+    }
+
+    # Nginx Config
+    class { 'nginx':
+      manage_repo => true,
+      package_source => 'nginx-mainline'
+    }
+
+    file { "/var/www/":
+      ensure => directory,
+      recurse => true,
+      force => true,
+      require => Package["nginx"],
+    }
+
+    file { "/var/www/html":
+      ensure => absent,
+      recurse => true,
+      force => true,
+    }
+
+    file { "/etc/nginx/sites-available/default":
+      ensure => absent,
+      force  => true,
+    }
+
+    file { "/etc/nginx/sites-enabled/default":
+      ensure => absent,
+      force  => true,
+    }
+
+  nginx::resource::server { $facts['hostname']:
+    ensure                => present,
+    listen_port           => 80,
+    listen_options        => default_server,
+    ipv6_enable           => true,
+    server_name           => [ 'kinetix-lis.com', 'www.kinetix-lis.com' ],
+    www_root              => '/var/www/kinetix-lis/public',
+    index_files           => [ 'index.php', 'index.html', 'index.htm' ],
+    use_default_location  => false,
+  }
