@@ -4,9 +4,14 @@ class roles::lemp {
     package { 'git':
         ensure => 'installed',
     }
+    class { '::php::globals':
+      php_version => '7.1',
+      config_root => '/etc/php/7.1'
+    }->
     class { '::php':
       ensure       => latest,
       manage_repos => true,
+      package_prefix => 'php7.1-',
       fpm          => true,
       dev          => true,
       composer     => true,
@@ -59,3 +64,31 @@ class roles::lemp {
     index_files           => [ 'index.php', 'index.html', 'index.htm' ],
     use_default_location  => false,
   }
+
+nginx::resource::location { "/":
+    ensure            => present,
+    server            => $facts['hostname'],
+    try_files         => [ '$uri', '$uri/', '/index.php?$query_string' ],
+    index_files       => []
+  }
+
+    nginx::resource::location { "~ \.php$":
+      ensure              => present,
+      server              => $facts['hostname'],
+      try_files           => [ '$uri', '=404' ],
+      index_files         => [],
+      include             => [ 'fastcgi_params' ],
+      location_cfg_append => {
+        fastcgi_split_path_info => '^(.+\.php)(/.+)$',
+        fastcgi_param           => { 'SCRIPT_FILENAME' => '$document_root$fastcgi_script_name' },
+        fastcgi_pass            => 'unix:/run/php/php7.1-fpm.sock',
+        fastcgi_index           => 'index.php'
+    }
+  }
+
+    nginx::resource::location { "~ /\.ht":
+      ensure          => present,
+      server          => $facts['hostname'],
+      location_deny   => ['all'],
+      index_files     => []
+ }
