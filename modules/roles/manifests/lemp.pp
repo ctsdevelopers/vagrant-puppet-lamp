@@ -63,13 +63,14 @@ class roles::lemp {
     www_root              => '/var/www/kinetix-lis/public',
     index_files           => [ 'index.php', 'index.html', 'index.htm' ],
     use_default_location  => false,
+    raw_append => ['if ( $http_x_forwarded_proto = \'http\' ) { return 302 https://$host$request_uri; }'],
   }
 
-nginx::resource::location { "/":
+  nginx::resource::location { "/":
     ensure            => present,
     server            => $facts['hostname'],
     try_files         => [ '$uri', '$uri/', '/index.php?$query_string' ],
-    index_files       => []
+    index_files       => [],
   }
 
     nginx::resource::location { "~ \.php$":
