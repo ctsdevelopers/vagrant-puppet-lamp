@@ -1,3 +1,3 @@
 node /agent/ {
-  include roles::kinetix
+  include roles::lemp
 }
